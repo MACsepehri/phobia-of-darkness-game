@@ -1,6 +1,3 @@
-from Engine.Assets.UI import Button
-
-
 def get_menu_start(main, font):
     start = main.button(
         main.win.width / 2 - 200 / 2,
