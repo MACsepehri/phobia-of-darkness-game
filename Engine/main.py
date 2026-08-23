@@ -1,6 +1,7 @@
 import pygame
 import sys
 from Engine.Assets.UI import *
+import time as _time
 
 pygame.init()
 
@@ -26,8 +27,15 @@ class Engine:
 
     def render_image(self, img, pos): self.win.blit(img, pos)
 
-    def full_window_size(self):
-        return (pygame.display.Info().current_w, pygame.display.Info().current_h)
+    def full_window_size(self): return (pygame.display.Info().current_w, pygame.display.Info().current_h)
+
+    def draw_text(self, text, color, x, y, font): self.win.blit(font.render(text, True, color), (x, y))
+
+    def delay(self, milliseconds): pygame.time.delay(milliseconds)
+
+    def time(self): return _time.time()
+
+    def is_clicked(self, key): return pygame.key.get_pressed()[key]
 
     def run(self, update_func = lambda: ..., event_func = lambda: ..., exit_func = lambda: ...):
         while True:
@@ -40,3 +48,5 @@ class Engine:
 
             update_func()
             pygame.display.update()
+
+def get_pg(): return pygame
