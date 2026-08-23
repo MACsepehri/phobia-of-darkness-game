@@ -125,7 +125,7 @@ def roomInStartedNight1():
         if draw_text_state != "-":
             drawAnimatedText()
 
-        main.draw_text(f"Subject: {subject}\nNight: {night}", "white", main.win.width - 400, 100, font)
+        main.draw_text(f"Subject: {subject}\nNight: {night}", "white", main.win.width - 450, 100, font)
 
 
 def render_menu():
@@ -213,7 +213,7 @@ def handle_condition():
     global other_text
 
     if isInGame() or state == "night-1-start":
-        main.draw_text(f"Subject: {subject}\nNight: {night}\n{other_text}", "white", main.win.width - 400, 100, font)
+        main.draw_text(f"Subject: {subject}\nNight: {night}\n{other_text}", "white", main.win.width - 450, 100, font)
 
         if check_collision(player.rect, BED_RECT):
             other_text = "Press (e) to sleep."
@@ -251,7 +251,7 @@ def eventFunc():
                 draw_text_state = "first-10"
 
         elif state == "game-play":
-            if gameplay_text == "Press (e) to sleep.":
+            if gameplay_text == "Press (e) to sleep." and draw_text_state == "completed" and check_collision(player.rect, BED_RECT):
                 other_text = ""
                 state = "sleep-time"
                 return
@@ -275,7 +275,7 @@ def eventFunc():
                         draw_text_state = "first-10"
                     else:
                         subject = "Go to bed and sleep."
-                        gameplay_text = "Press (e) to sleep."
+                        gameplay_text = ""
                         gameplay_index = 0
                         gameplay_last_time = main.time()
                         gameplay_speed = 50
@@ -303,10 +303,6 @@ def eventFunc():
                         gameplay_animation_complete = False
                         draw_text_state = "completed"
 
-            elif other_text == "Press (e) to sleep.":
-                other_text = ""
-                state = "sleep-time"
-
         elif state == "night-1-start":
             if draw_text_state == "completed" or draw_text_state == "animating":
                 if gameplay_text == "What was that sound?\nPress (e) to continue.":
@@ -317,14 +313,21 @@ def eventFunc():
                     gameplay_animation_complete = False
                     draw_text_state = "first-10"
                 elif gameplay_text == "I need to check what happened...\nPress (e) to continue.":
-                    gameplay_text = "Maybe it was just my imagination...\nPress (e) to continue."
+                    subject = "Check what happened."
+                    gameplay_text = "I think I need to check."
                     gameplay_index = 0
                     gameplay_last_time = main.time()
                     gameplay_speed = 50
                     gameplay_animation_complete = False
                     draw_text_state = "first-10"
-                else:
-                    pass
+                elif gameplay_text == "I think I need to check.":
+                    subject = "Go to bed and sleep."
+                    gameplay_text = "Press (e) to sleep."
+                    gameplay_index = 0
+                    gameplay_last_time = main.time()
+                    gameplay_speed = 50
+                    gameplay_animation_complete = False
+                    draw_text_state = "completed"
 
 
 main = Engine("Phobia Of Darkness", (True, (0, 0)))
