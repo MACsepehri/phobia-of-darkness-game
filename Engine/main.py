@@ -30,7 +30,6 @@ class Player:
         self.x = 0
         self.y = main.win.height - self.rect.height
 
-        # هماهنگ کردن موقعیت اولیه
         self.rect.x = self.x
         self.rect.y = self.y
 
@@ -65,7 +64,6 @@ class Player:
             )
 
         self.rect = self.image.get_rect()
-        # بعد از تغییر تصویر، دوباره rect را با مختصات فعلی هماهنگ کن
         self.rect.x = self.x
         self.rect.y = self.y
 
@@ -95,7 +93,6 @@ class Player:
 
     def update(self):
         self.move()
-        # هماهنگ سازی نهایی rect با x و y
         self.rect.x = self.x
         self.rect.y = self.y
         self.main.render_image(self.image, (self.x, self.y))
