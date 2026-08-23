@@ -5,6 +5,28 @@ import time as _time
 
 pygame.init()
 
+class Player:
+    def __init__(self, main):
+        self.x = 0
+        self.y = 0
+        self.main = main
+        self.image = self.main.transform_image(self.main.load_image("Assets/Image/Player/state1.png"), (90, 220))
+
+    def set_position(self, x, y):
+        self.x = x
+        self.y = y
+        self.update()
+
+    def move(self):
+        keys = pygame.key.get_pressed()
+
+    def update(self):
+        self.move()
+        self.main.render_image(self.image, (self.x, self.y))
+
+    @property
+    def rect(self): return self.image.get_rect()
+
 class Engine:
     def __init__(self, title="Game", fullscreen=(False, (400, 400)), icon=""):
         self.win = None

@@ -1,4 +1,4 @@
-from Engine.main import Engine, get_pg
+from Engine.main import Engine, Player, get_pg
 import Assets.UI.button as btns
 import sys
 
@@ -24,7 +24,6 @@ def render_menu():
             btn.draw(main.win)
         btns.create_action(menu_btn, [start, sys.exit])
 
-
 def render_loading():
     global state, loading_text, loading_index, last_time, loading_state
 
@@ -41,10 +40,23 @@ def render_loading():
         main.draw_text("Press (e) to skip", "#7A0000", 100, main.win.height - 100, font)
         loading_state = "entertaiment-text"
 
+def drawPlayer():
+    global state
+    if state == "game-play":
+        player.update()
+
+def drawMainRoom():
+    if state == "game-play":
+        main_room = main.load_image("Assets/Image/Background/Room/room.png")
+        main_room = main.transform_image(main_room, main.full_window_size())
+        main.render_image(main_room, (0, 0))
+        drawPlayer()
+
 def update():
     main.set_color("black")
     render_menu()
     render_loading()
+    drawMainRoom()
 
 def eventFunc():
     global state, loading_state
@@ -56,6 +68,7 @@ def eventFunc():
 
 main = Engine("Phobia Of Darkness", (True, (0,0)))
 font = main.load_font("Assets/Font/font.ttf", 32)
+player = Player(main)
 pg = get_pg()
 
 main.run(update, eventFunc)
