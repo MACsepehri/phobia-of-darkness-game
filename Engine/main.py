@@ -26,6 +26,9 @@ class Engine:
 
     def render_image(self, img, pos): self.win.blit(img, pos)
 
+    def full_window_size(self):
+        return (pygame.display.Info().current_w, pygame.display.Info().current_h)
+
     def run(self, update_func = lambda: ..., event_func = lambda: ..., exit_func = lambda: ...):
         while True:
             for self.event in pygame.event.get():
