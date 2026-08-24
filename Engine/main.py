@@ -21,6 +21,8 @@ class Player:
         self.moving = False
         self.right = True
         self.can_move = True
+        self.is_dead = False  # اضافه شد
+        self.dead_image = None  # اضافه شد
 
         img_s1 = self.main.load_image("Assets/Image/Player/state1.png")
         img_s2 = self.main.load_image("Assets/Image/Player/state2.png")
@@ -58,6 +60,13 @@ class Player:
             self.y = self.main.win.height - self.rect.height
 
     def set_status(self):
+        if self.is_dead and self.dead_image:
+            self.image = self.dead_image
+            self.rect = self.image.get_rect()
+            self.rect.x = self.x
+            self.rect.y = self.y
+            return
+            
         if self.moving:
             self.image = self.img_walk_right if self.right else self.img_walk_left
         else:
@@ -68,6 +77,9 @@ class Player:
         self.rect.y = self.y
 
     def move(self):
+        if self.is_dead:
+            return
+            
         keys = pygame.key.get_pressed()
         self.moving = False
         if self.can_move:
@@ -91,6 +103,16 @@ class Player:
 
         self.set_in_window()
         self.set_status()
+
+    def kill(self):
+        self.is_dead = True
+        self.dead_image = self.main.transform_image(self.main.load_image("Assets/Image/Player/Dead/player-body-parts.png"), (450, 250))
+        self.image = self.dead_image
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+        self.can_move = False
+        self.moving = False
 
     def update(self):
         self.move()

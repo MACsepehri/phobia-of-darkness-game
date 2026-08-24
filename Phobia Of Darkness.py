@@ -24,6 +24,9 @@ inner_viberation_night_1_timer = 0
 start_inner_viberation_night_1_timer = False
 inner_show_jungle_night_1_timer = 0
 start_inner_show_jungle_night_1_timer = False
+inner_show_dead_player_timer = 0
+start_inner_show_dead_player_timer = False
+_start_inner_show_dead_player_timer = True
 show_awake_image = False
 set_pos = True
 
@@ -64,6 +67,7 @@ def handleJungleNight1():
 
 def jungleNight1():
     global state, start_inner_show_jungle_night_1_timer, player, window_w, window_h, set_pos, gameplay_text, draw_text_state, gameplay_animation_complete
+    global weight_obj_y
     
     if state == "night-1-jungle-start" and start_inner_show_jungle_night_1_timer:
         bg = main.load_image("Assets/Image/Background/Jungle/jungle-bg-1.png")
@@ -74,14 +78,12 @@ def jungleNight1():
         
         if abs(player.x - center_x) < 50:
             player.can_move = False
-            player.x = center_x
+            player.x = center_x - 50
 
             if draw_text_state == "-" or draw_text_state == "completed":
                 gameplay_text = "No, again nightmare?\nI wish monsters again don't kill me!"
                 draw_text_state = "first-10"
                 gameplay_animation_complete = False
-        else:
-            player.can_move = True
         
         if player.x > window_w - player.rect.width:
             player.x = window_w - player.rect.width
@@ -274,7 +276,7 @@ def isInGame():
     return False
 
 def handle_condition():
-    global other_text, set_pos
+    global other_text, set_pos, weight_obj_y, gameplay_text, start_inner_show_dead_player_timer, inner_show_dead_player_timer, _start_inner_show_dead_player_timer, state
 
     if isInGame() or state == "night-1-start" or state == "night-1-jungle-start":
         main.draw_text(f"Subject: {subject}\nNight: {night}\n{other_text}", "white", main.win.width - 450, 100, font)
@@ -287,6 +289,37 @@ def handle_condition():
         player.x = 0
         player.y = window_h - player.rect.height
         set_pos = False
+
+    if state == "night-1-jungle-start" and not player.can_move:
+        if weight_obj_y < window_h + weight_obj.get_rect().height:
+            weight_rect = weight_obj.get_rect()
+            weight_rect.x = weight_obj_x
+            weight_rect.y = weight_obj_y
+            
+            if check_collision(player.rect, weight_rect):
+                player.kill()
+            
+            weight_obj_y += 5
+        else:
+            weight_obj_y = window_h + weight_obj.get_rect().height
+            if not start_inner_show_dead_player_timer and _start_inner_show_dead_player_timer:
+                start_inner_show_dead_player_timer = True
+
+    if state == "night-1-jungle-start":
+        if start_inner_show_dead_player_timer:
+            if inner_show_dead_player_timer != 400:
+                inner_show_dead_player_timer += 1
+            else:
+                inner_show_dead_player_timer = 0
+                _start_inner_show_dead_player_timer = False
+                state = "day-1"
+
+    if player.is_dead:
+        gameplay_text = "..."
+
+
+def loadObjects():
+    main.render_image(weight_obj, (weight_obj_x, weight_obj_y))
 
 
 def update():
@@ -303,6 +336,8 @@ def update():
     draw_sleep_animation()
     renderNight1()
     roomInStartedNight1()
+
+    loadObjects()
 
 def eventFunc():
     global state, loading_state, subject, other_text
@@ -409,5 +444,10 @@ BED_RECT = get_pg().Rect(int(window_w * 0.25) + 150, int(window_h * 0.25), int(w
 smash_sound = main.load_music("Assets/Sound/smash.wav")
 strange_sound = main.load_music("Assets/Sound/strange.mp3")
 paranormal_sound = main.load_music("Assets/Sound/paranormal.mp3")
+
+# load objects
+weight_obj = main.transform_image(main.load_image("Assets/Image/Object/weight.png"), (120, 120))
+weight_obj_x = window_w / 2 - weight_obj.get_rect().width
+weight_obj_y = -120
 
 main.run(update, eventFunc)
