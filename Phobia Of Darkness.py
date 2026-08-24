@@ -95,6 +95,22 @@ def jungleNight1():
         player.update()
         drawAnimatedText()
 
+# day 1 handler
+def firstDayHandler():
+    global set_pos
+
+    if state == "day-1":
+        bg = main.load_image("Assets/Image/Background/DiningRoom/day-eating-breakfast.png")
+        bg = main.transform_image(bg, (window_w, window_h))
+        main.render_image(bg, (0, 0))
+        if set_pos:
+            player.image = main.load_image("Assets/Image/Player/state1.png")
+            player.is_dead = False
+            player.dead_image = None
+            player.x = 0
+            player.y = window_h - player.rect.height
+            set_pos = False
+
 # menu action
 def start():
     global state
@@ -210,11 +226,16 @@ def render_menu():
         btns.create_action(menu_btn, [start, sys.exit])
 
 def render_loading():
-    global state, loading_text, loading_index, last_time, loading_state
+    global state, loading_text, loading_index, last_time, loading_state, vol
 
     if state == "loading":
         now = main.time()
-
+        if vol != 0:
+            vol -= 0.001
+            main.set_background_music_sound(vol)
+        else:
+            vol = 0
+            main.set_background_music_sound(vol)
         if now - last_time >= loading_speed / 400.0:
             last_time = now
             if loading_index < len(loading_text):
@@ -313,6 +334,7 @@ def handle_condition():
                 inner_show_dead_player_timer = 0
                 _start_inner_show_dead_player_timer = False
                 state = "day-1"
+                set_pos  = True
 
     if player.is_dead:
         gameplay_text = "..."
@@ -336,6 +358,9 @@ def update():
     draw_sleep_animation()
     renderNight1()
     roomInStartedNight1()
+
+    # days
+    firstDayHandler()
 
     loadObjects()
 
@@ -433,7 +458,10 @@ def eventFunc():
                     gameplay_animation_complete = False
                     draw_text_state = "first-10"
 
+vol = 0.1
 main = Engine("Phobia Of Darkness", (True, (0, 0)))
+main.load_music_background("Assets/Sound/background.ogg")
+main.set_background_music_sound(vol)
 font = main.load_font("Assets/Font/font.ttf", 32)
 big_font = main.load_font("Assets/Font/font.ttf", 48)
 player = Player(main)

@@ -5,6 +5,7 @@ import time as _time
 import random as _random
 
 pygame.init()
+pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=512)
 
 BED_RECT = pygame.Rect(pygame.display.Info().current_w - 428, pygame.display.Info().current_h - 355, 540, 212)
 
@@ -21,8 +22,8 @@ class Player:
         self.moving = False
         self.right = True
         self.can_move = True
-        self.is_dead = False  # اضافه شد
-        self.dead_image = None  # اضافه شد
+        self.is_dead = False
+        self.dead_image = None
 
         img_s1 = self.main.load_image("Assets/Image/Player/state1.png")
         img_s2 = self.main.load_image("Assets/Image/Player/state2.png")
@@ -147,6 +148,15 @@ class Engine:
     def render_image(self, img, pos): self.win.blit(img, pos)
 
     def full_window_size(self): return (pygame.display.Info().current_w, pygame.display.Info().current_h)
+
+    def load_music_background(self, path, loop=-1):
+        pygame.mixer.music.load(path)
+        pygame.mixer.music.play(loop)
+
+    def set_background_music_sound(self, volume=1):
+        pygame.mixer.music.set_volume(volume)
+
+    def pause_background_music(self): pygame.mixer.music.pause()
 
     def draw_text(self, text, color, x, y, font, middle=False):
         if not middle: self.win.blit(font.render(text, True, color), (x, y))
