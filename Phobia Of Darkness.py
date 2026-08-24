@@ -20,8 +20,12 @@ inner_start_night_1_timer = 0
 start_inner_start_night_1_timer = True
 inner_start_wake_up_night_1_timer = 0
 start_wake_up_night_1_timer = False
-
+inner_viberation_night_1_timer = 0
+start_inner_viberation_night_1_timer = False
+inner_show_jungle_night_1_timer = 0
+start_inner_show_jungle_night_1_timer = False
 show_awake_image = False
+set_pos = True
 
 # animated texts
 gameplay_text = "Uh, again it is night and moon comes up.\nI wish I don't have any nightmares this time.\nPress (e) to continue."
@@ -41,6 +45,30 @@ dialogues = [
 
 e_key_cooldown = 0
 e_key_delay = 0.4
+
+# night 1 position handlers
+def handleJungleNight1():
+    global inner_show_jungle_night_1_timer, start_inner_show_jungle_night_1_timer, gameplay_text, state
+
+    if state == "night-1-jungle":
+        gameplay_text = "u..uh...\nWhh...we..reee am ... mm I?....\nN.No..no. Ag...ain???"
+        drawAnimatedText()
+        if draw_text_state == "completed":
+            if not start_inner_show_jungle_night_1_timer and inner_show_jungle_night_1_timer != 800:
+                inner_show_jungle_night_1_timer += 1
+            else:
+                start_inner_show_jungle_night_1_timer = True
+                inner_show_jungle_night_1_timer = 0
+                state = "night-1-jungle-start"
+                return
+
+def jungleNight1():
+    if state == "night-1-jungle-start" and start_inner_show_jungle_night_1_timer:
+        bg = main.load_image("Assets/Image/Background/Jungle/jungle-bg-1.png")
+        bg = main.transform_image(bg, (window_w, window_h))
+        main.render_image(bg, (0, 0))
+        player.update()
+        drawAnimatedText()
 
 # menu action
 def start():
@@ -114,9 +142,18 @@ def roomInStartedNight1():
     global state, draw_text_state, gameplay_text, gameplay_animation_complete
 
     if state == "night-1-start":
-        bg = main.load_image("Assets/Image/Background/Room/room.png")
-        bg = main.transform_image(bg, (window_w, window_h))
-        main.render_image(bg, (0, 0))
+        if gameplay_text == "...":
+            bg = main.load_image("Assets/Image/Background/Room/room.png")
+            bg = main.transform_image(bg, (window_w, window_h))
+            main.render_image(bg, (main.randint(-20, 20), main.randint(-20, 20)))
+            
+            player.x = player.x + main.randint(-20, 20)
+            player.y = player.y + main.randint(-20, 20)
+            handleViberationInNight1()
+        else:
+            bg = main.load_image("Assets/Image/Background/Room/room.png")
+            bg = main.transform_image(bg, (window_w, window_h))
+            main.render_image(bg, (0, 0))
 
         player.update()
 
@@ -124,6 +161,19 @@ def roomInStartedNight1():
             drawAnimatedText()
 
         main.draw_text(f"Subject: {subject}\nNight: {night}", "white", main.win.width - 450, 100, font)
+
+def handleViberationInNight1():
+    global inner_viberation_night_1_timer, start_inner_viberation_night_1_timer, state
+
+    if not start_inner_viberation_night_1_timer:
+        if inner_viberation_night_1_timer != 600:
+            inner_viberation_night_1_timer += 1
+        else:
+            inner_viberation_night_1_timer = 0
+            start_inner_viberation_night_1_timer = True
+            state = "night-1-jungle"
+            smash_sound.play()
+            return
 
 def render_menu():
     if state == "menu":
@@ -201,18 +251,28 @@ def isInGame():
     return False
 
 def handle_condition():
-    global other_text
+    global other_text, set_pos
 
-    if isInGame() or state == "night-1-start":
+    if isInGame() or state == "night-1-start" or state == "night-1-jungle-start":
         main.draw_text(f"Subject: {subject}\nNight: {night}\n{other_text}", "white", main.win.width - 450, 100, font)
-
-        if check_collision(player.rect, BED_RECT):
+        if check_collision(player.rect, BED_RECT) and state == "game-play":
             other_text = "Press (e) to sleep."
         else:
             other_text = ""
 
+    if set_pos and state == "night-1-jungle-start":
+        player.x = 0
+        player.y = window_h - player.rect.height
+        set_pos = False
+
+
 def update():
     main.set_color("black")
+
+    # handlers
+    handleJungleNight1()
+    jungleNight1()
+    
     render_menu()
     render_loading()
     drawMainRoom()
@@ -243,7 +303,7 @@ def eventFunc():
                 draw_text_state = "first-10"
 
         elif state == "game-play":
-            if other_text == "Press (e) to sleep." and draw_text_state == "completed" and check_collision(player.rect, BED_RECT):
+            if other_text == "Press (e) to sleep." and draw_text_state == "completed" and check_collision(player.rect, BED_RECT) :
                 other_text = ""
                 state = "sleep-time"
                 return
@@ -299,6 +359,16 @@ def eventFunc():
             if draw_text_state == "completed" or draw_text_state == "animating":
                 if gameplay_text == "What is that sound? It doesn't looks normal.\nPress (e) to continue.":
                     gameplay_text = "..."
+                    gameplay_index = 0
+                    gameplay_last_time = main.time()
+                    gameplay_speed = 50
+                    gameplay_animation_complete = False
+                    draw_text_state = "first-10"
+
+        elif state == "night-1-jungle-start":
+            if draw_text_state == "completed" or draw_text_state == "animating":
+                if gameplay_text == "":
+                    gameplay_text = "No, again nightmare?\nI wish monsters again don't kill me!"
                     gameplay_index = 0
                     gameplay_last_time = main.time()
                     gameplay_speed = 50

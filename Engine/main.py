@@ -2,6 +2,7 @@ import pygame
 import sys
 from Engine.Assets.UI import *
 import time as _time
+import random as _random
 
 pygame.init()
 
@@ -13,23 +14,27 @@ def check_collision(rect1, rect2):
     else:
         return False
 
-
-class Player:
-    def __init__(self, main, speed=5):
+class Enemy:
+    def __init__(self, main, speed=5, path="", attack_path=""):
         self.main = main
         self.speed = speed
-        self.moveing = False
+        self.moving = False
+        self.right = True
 
-        self.image = self.main.transform_image(
-            self.main.load_image("Assets/Image/Player/state1.png"),
-            (90, 220)
-        )
+        img_s1 = self.main.load_image("Assets/Image/Player/state1.png")
+        img_s2 = self.main.load_image("Assets/Image/Player/state2.png")
+        
+        self.img_idle_right = self.main.transform_image(img_s1, (90, 220))
+        self.img_idle_left = pygame.transform.flip(self.img_idle_right, True, False)
 
+        self.img_walk_right = self.main.transform_image(img_s2, (90, 220))
+        self.img_walk_left = pygame.transform.flip(self.img_walk_right, True, False)
+
+        self.image = self.img_idle_right
         self.rect = self.image.get_rect()
 
         self.x = 0
         self.y = main.win.height - self.rect.height
-
         self.rect.x = self.x
         self.rect.y = self.y
 
@@ -52,16 +57,10 @@ class Player:
             self.y = self.main.win.height - self.rect.height
 
     def set_status(self):
-        if self.moveing:
-            self.image = self.main.transform_image(
-                self.main.load_image("Assets/Image/Player/state2.png"),
-                (90, 220)
-            )
+        if self.moving:
+            self.image = self.img_walk_right if self.right else self.img_walk_left
         else:
-            self.image = self.main.transform_image(
-                self.main.load_image("Assets/Image/Player/state1.png"),
-                (90, 220)
-            )
+            self.image = self.img_idle_right if self.right else self.img_idle_left
 
         self.rect = self.image.get_rect()
         self.rect.x = self.x
@@ -69,27 +68,111 @@ class Player:
 
     def move(self):
         keys = pygame.key.get_pressed()
-
-        self.moveing = False
+        self.moving = False
 
         if keys[pygame.K_a]:
             self.x -= self.speed
-            self.moveing = True
+            self.moving = True
+            self.right = False
 
         if keys[pygame.K_d]:
             self.x += self.speed
-            self.moveing = True
+            self.moving = True
+            self.right = True
 
         if keys[pygame.K_w]:
             self.y -= self.speed
-            self.moveing = True
+            self.moving = True
 
         if keys[pygame.K_s]:
             self.y += self.speed
-            self.moveing = True
+            self.moving = True
 
-        self.set_status()
         self.set_in_window()
+        self.set_status()
+
+    def update(self):
+        self.move()
+        self.rect.x = self.x
+        self.rect.y = self.y
+        self.main.render_image(self.image, (self.x, self.y))
+
+class Player:
+    def __init__(self, main, speed=5):
+        self.main = main
+        self.speed = speed
+        self.moving = False
+        self.right = True
+
+        img_s1 = self.main.load_image("Assets/Image/Player/state1.png")
+        img_s2 = self.main.load_image("Assets/Image/Player/state2.png")
+        
+        self.img_idle_right = self.main.transform_image(img_s1, (90, 220))
+        self.img_idle_left = pygame.transform.flip(self.img_idle_right, True, False)
+
+        self.img_walk_right = self.main.transform_image(img_s2, (90, 220))
+        self.img_walk_left = pygame.transform.flip(self.img_walk_right, True, False)
+
+        self.image = self.img_idle_right
+        self.rect = self.image.get_rect()
+
+        self.x = 0
+        self.y = main.win.height - self.rect.height
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+    def set_position(self, x, y):
+        self.x = x
+        self.y = y
+        self.rect.x = x
+        self.rect.y = y
+        self.update()
+
+    def set_in_window(self):
+        if self.x <= 0:
+            self.x = 0
+        elif self.x >= self.main.win.width - self.rect.width:
+            self.x = self.main.win.width - self.rect.width
+
+        if self.y <= 0:
+            self.y = 0
+        elif self.y >= self.main.win.height - self.rect.height:
+            self.y = self.main.win.height - self.rect.height
+
+    def set_status(self):
+        if self.moving:
+            self.image = self.img_walk_right if self.right else self.img_walk_left
+        else:
+            self.image = self.img_idle_right if self.right else self.img_idle_left
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+    def move(self):
+        keys = pygame.key.get_pressed()
+        self.moving = False
+
+        if keys[pygame.K_a]:
+            self.x -= self.speed
+            self.moving = True
+            self.right = False
+
+        if keys[pygame.K_d]:
+            self.x += self.speed
+            self.moving = True
+            self.right = True
+
+        if keys[pygame.K_w]:
+            self.y -= self.speed
+            self.moving = True
+
+        if keys[pygame.K_s]:
+            self.y += self.speed
+            self.moving = True
+
+        self.set_in_window()
+        self.set_status()
 
     def update(self):
         self.move()
@@ -108,6 +191,8 @@ class Engine:
         self.clock = pygame.time.Clock()
         pygame.display.set_caption(title)
         if self.icon != "": pygame.display.set_icon(pygame.image.load(self.icon))
+
+    def randint(self, a, b): return _random.randint(a, b)
 
     def set_color(self, color): self.win.fill(color)
 
