@@ -63,10 +63,33 @@ def handleJungleNight1():
                 return
 
 def jungleNight1():
+    global state, start_inner_show_jungle_night_1_timer, player, window_w, window_h, set_pos, gameplay_text, draw_text_state, gameplay_animation_complete
+    
     if state == "night-1-jungle-start" and start_inner_show_jungle_night_1_timer:
         bg = main.load_image("Assets/Image/Background/Jungle/jungle-bg-1.png")
         bg = main.transform_image(bg, (window_w, window_h))
         main.render_image(bg, (0, 0))
+
+        center_x = (window_w - player.rect.width) // 2
+        
+        if abs(player.x - center_x) < 50:
+            player.can_move = False
+            player.x = center_x
+
+            if draw_text_state == "-" or draw_text_state == "completed":
+                gameplay_text = "No, again nightmare?\nI wish monsters again don't kill me!"
+                draw_text_state = "first-10"
+                gameplay_animation_complete = False
+        else:
+            player.can_move = True
+        
+        if player.x > window_w - player.rect.width:
+            player.x = window_w - player.rect.width
+            player.can_move = False
+        
+        if player.x < 0:
+            player.x = 0
+        
         player.update()
         drawAnimatedText()
 
