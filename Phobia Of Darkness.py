@@ -1,6 +1,7 @@
 from Engine.main import Engine, Player, get_pg, check_collision
 import Assets.UI.button as btns
 import sys
+import time
 
 # vars
 state = "menu"
@@ -38,20 +39,21 @@ dialogues = [
     "Let's go to bed and sleep.\nThink positive to not think about those... , never mind\nPress (e) to continue."
 ]
 
+e_key_cooldown = 0
+e_key_delay = 0.4
 
 # menu action
 def start():
     global state
     state = "loading"
 
-
 # functions
 def draw_sleep_animation():
-    global start_animation_of_sleep_smash, start_night_timer, state
+    global start_animation_of_sleep_smash, start_night_timer, state, subject
 
     if state == "sleep-time":
         main.draw_text(f"Night {night}", "white", 100, 100, big_font, True)
-
+        subject = ""
         if not start_animation_of_sleep_smash:
             smash_sound.play()
             pg.time.wait(2000)
@@ -62,7 +64,6 @@ def draw_sleep_animation():
             start_night_timer += 1
         else:
             state = "night-1"
-
 
 def renderNight1():
     global inner_start_night_1_timer, start_inner_start_night_1_timer, gameplay_text, draw_text_state, dialogue_index
@@ -86,31 +87,28 @@ def renderNight1():
             gameplay_text = "Uh ... , what was that fucking sound?\nPress (e) to continue."
             draw_text_state = "first-10"
             start_inner_start_night_1_timer = False
-            bang_sound.play(0)
+            paranormal_sound.play(0)
 
             if "Uh ... , what was that fucking sound?" not in dialogues[0]:
                 dialogues.append("Uh ... , what was that fucking sound?\nPress (e) to continue.")
 
             show_awake_image = True
             start_wake_up_night_1_timer = True
-            drawAnimatedText()
             return
 
         if start_wake_up_night_1_timer:
             if inner_start_wake_up_night_1_timer < 140:
                 inner_start_wake_up_night_1_timer += 1
-                drawAnimatedText()
                 return
             else:
                 start_wake_up_night_1_timer = False
                 state = "night-1-start"
                 inner_start_wake_up_night_1_timer = 0
-                gameplay_text = "What was that sound?\nPress (e) to continue."
+                gameplay_text = "What is that sound? It doesn't looks normal.\nPress (e) to continue."
                 draw_text_state = "first-10"
                 return
 
         drawAnimatedText()
-
 
 def roomInStartedNight1():
     global state, draw_text_state, gameplay_text, gameplay_animation_complete
@@ -127,7 +125,6 @@ def roomInStartedNight1():
 
         main.draw_text(f"Subject: {subject}\nNight: {night}", "white", main.win.width - 450, 100, font)
 
-
 def render_menu():
     if state == "menu":
         main.render_image(main.transform_image(main.load_image("Assets/Image/Background/Menu/MenuBackground.png"),
@@ -136,7 +133,6 @@ def render_menu():
         for btn in menu_btn:
             btn.draw(main.win)
         btns.create_action(menu_btn, [start, sys.exit])
-
 
 def render_loading():
     global state, loading_text, loading_index, last_time, loading_state
@@ -154,12 +150,10 @@ def render_loading():
         main.draw_text("Press (e) to skip", "#7A0000", 100, main.win.height - 100, font)
         loading_state = "entertaiment-text"
 
-
 def drawPlayer():
     global state
     if state == "game-play" or state == "night-1-start":
         player.update()
-
 
 def drawMainRoom():
     global draw_text_state, gameplay_animation_complete
@@ -174,7 +168,6 @@ def drawMainRoom():
         main.render_image(main_room, (0, 0))
         drawPlayer()
         drawAnimatedText()
-
 
 def drawAnimatedText():
     global draw_text_state, gameplay_index, gameplay_last_time, gameplay_animation_complete
@@ -202,12 +195,10 @@ def drawAnimatedText():
     elif draw_text_state == "completed":
         main.draw_text(gameplay_text, "white", 100, 100, font)
 
-
 def isInGame():
     if state == "game-play":
         return True
     return False
-
 
 def handle_condition():
     global other_text
@@ -220,7 +211,6 @@ def handle_condition():
         else:
             other_text = ""
 
-
 def update():
     main.set_color("black")
     render_menu()
@@ -231,13 +221,15 @@ def update():
     renderNight1()
     roomInStartedNight1()
 
-
 def eventFunc():
     global state, loading_state, subject, other_text
     global gameplay_text, gameplay_index, gameplay_last_time, gameplay_speed, gameplay_animation_complete, draw_text_state
-    global dialogue_index
+    global dialogue_index, e_key_cooldown
 
-    if main.is_clicked(pg.K_e):
+    current_time = time.time()
+    if main.is_clicked(pg.K_e) and current_time - e_key_cooldown >= e_key_delay:
+        e_key_cooldown = current_time
+
         if state == "loading":
             if loading_state == "entertaiment-text":
                 state = "game-play"
@@ -251,7 +243,7 @@ def eventFunc():
                 draw_text_state = "first-10"
 
         elif state == "game-play":
-            if gameplay_text == "Press (e) to sleep." and draw_text_state == "completed" and check_collision(player.rect, BED_RECT):
+            if other_text == "Press (e) to sleep." and draw_text_state == "completed" and check_collision(player.rect, BED_RECT):
                 other_text = ""
                 state = "sleep-time"
                 return
@@ -296,7 +288,7 @@ def eventFunc():
                         draw_text_state = "first-10"
                     else:
                         subject = "Go to bed and sleep."
-                        gameplay_text = "Press (e) to sleep."
+                        gameplay_text = "..."
                         gameplay_index = 0
                         gameplay_last_time = main.time()
                         gameplay_speed = 50
@@ -305,30 +297,13 @@ def eventFunc():
 
         elif state == "night-1-start":
             if draw_text_state == "completed" or draw_text_state == "animating":
-                if gameplay_text == "What was that sound?\nPress (e) to continue.":
-                    gameplay_text = "I need to check what happened...\nPress (e) to continue."
+                if gameplay_text == "What is that sound? It doesn't looks normal.\nPress (e) to continue.":
+                    gameplay_text = "..."
                     gameplay_index = 0
                     gameplay_last_time = main.time()
                     gameplay_speed = 50
                     gameplay_animation_complete = False
                     draw_text_state = "first-10"
-                elif gameplay_text == "I need to check what happened...\nPress (e) to continue.":
-                    subject = "Check what happened."
-                    gameplay_text = "I think I need to check."
-                    gameplay_index = 0
-                    gameplay_last_time = main.time()
-                    gameplay_speed = 50
-                    gameplay_animation_complete = False
-                    draw_text_state = "first-10"
-                elif gameplay_text == "I think I need to check.":
-                    subject = "Go to bed and sleep."
-                    gameplay_text = "Press (e) to sleep."
-                    gameplay_index = 0
-                    gameplay_last_time = main.time()
-                    gameplay_speed = 50
-                    gameplay_animation_complete = False
-                    draw_text_state = "completed"
-
 
 main = Engine("Phobia Of Darkness", (True, (0, 0)))
 font = main.load_font("Assets/Font/font.ttf", 32)
@@ -340,6 +315,6 @@ window_w, window_h = main.full_window_size()
 BED_RECT = get_pg().Rect(int(window_w * 0.25) + 150, int(window_h * 0.25), int(window_w * 0.25), int(window_h * 0.4))
 smash_sound = main.load_music("Assets/Sound/smash.wav")
 strange_sound = main.load_music("Assets/Sound/strange.mp3")
-bang_sound = main.load_music("Assets/Sound/bang.mp3")
+paranormal_sound = main.load_music("Assets/Sound/paranormal.mp3")
 
 main.run(update, eventFunc)
